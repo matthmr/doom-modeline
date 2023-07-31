@@ -288,12 +288,23 @@ Uses `nerd-icons-mdicon' to fetch the icon."
         (when doom-modeline-buffer-state-icon
           (ignore-errors
             (concat
+             (when (or (buffer-narrowed-p)
+                       (and (bound-and-true-p fancy-narrow-mode)
+                            (fancy-narrow-active-p))
+                       (bound-and-true-p dired-narrow-mode))
+               (doom-modeline-buffer-file-state-icon
+                "nf-md-unfold_less_horizontal" "↕" "="
+                'doom-modeline-warning))
              (cond (buffer-read-only
                     (doom-modeline-buffer-file-state-icon
                      "nf-md-lock" "🔒" "%1*"
                      'doom-modeline-warning))
-                   ((and buffer-file-name (buffer-modified-p)
+                   ((and (buffer-modified-p)
                          doom-modeline-buffer-modification-icon)
+
+                    ;; (and buffer-file-name (buffer-modified-p)
+                    ;;      doom-modeline-buffer-modification-icon)
+
                     (doom-modeline-buffer-file-state-icon
                      "nf-md-content_save_edit" "💾" "%1*"
                      'doom-modeline-warning))
@@ -304,14 +315,7 @@ Uses `nerd-icons-mdicon' to fetch the icon."
                     (doom-modeline-buffer-file-state-icon
                      "nf-md-cancel" "🚫" "!"
                      'doom-modeline-urgent))
-                   (t ""))
-             (when (or (buffer-narrowed-p)
-                       (and (bound-and-true-p fancy-narrow-mode)
-                            (fancy-narrow-active-p))
-                       (bound-and-true-p dired-narrow-mode))
-               (doom-modeline-buffer-file-state-icon
-                "nf-md-unfold_less_horizontal" "↕" "><"
-                'doom-modeline-warning)))))))
+                   (t "")))))))
 
 (defvar-local doom-modeline--buffer-file-name nil)
 (defun doom-modeline-update-buffer-file-name (&rest _)
@@ -417,15 +421,14 @@ mouse-1: Previous buffer\nmouse-3: Next buffer"
 Including the current working directory, the file name, and its state (modified,
 read-only or non-existent)."
   (concat
-   (doom-modeline-spc)
    (doom-modeline--buffer-mode-icon)
    (doom-modeline--buffer-state-icon)
-   (doom-modeline--buffer-name)))
+   (doom-modeline--buffer-name)
+   (doom-modeline-spc)))
 
 (doom-modeline-def-segment buffer-info-simple
   "Display only the current buffer's name, but with fontification."
   (concat
-   (doom-modeline-spc)
    (doom-modeline--buffer-mode-icon)
    (doom-modeline--buffer-state-icon)
    (doom-modeline--buffer-simple-name)))
@@ -635,7 +638,7 @@ project directory is important."
 mouse-1: Display minor modes menu"
              local-map ,minions-mode-line-minor-modes-map)
             ,(doom-modeline-spc))
-        `((:propertize ("" minor-mode-alist)
+        `((:propertize ("" minor-mode-alist " ")
            face ,face
            mouse-face ,mouse-face
            help-echo ,help-echo
@@ -726,9 +729,10 @@ Uses `nerd-icons-octicon' to fetch the icon."
     (concat
      (doom-modeline-spc)
      (propertize (concat
-                  (doom-modeline-display-icon icon)
+                  (string-join `(" " ,(doom-modeline-display-icon icon)))
                   (doom-modeline-vspc)
-                  (doom-modeline-display-text text))
+                  (string-join `(,(doom-modeline-display-text text) " ")))
+                 'face '(:inherit mh/doom-modeline)
                  'mouse-face 'doom-modeline-highlight
                  'help-echo (get-text-property 1 'help-echo vc-mode)
                  'local-map (get-text-property 1 'local-map vc-mode))
@@ -1152,18 +1156,12 @@ block selection."
   "Display current Emacs or evil macro being recorded."
   (when (and (doom-modeline--active)
              (or defining-kbd-macro executing-kbd-macro))
-    (let ((sep (propertize " " 'face 'doom-modeline-panel ))
-          (vsep (propertize " " 'face
-                            '(:inherit (doom-modeline-panel variable-pitch)))))
+    (let ((sep (propertize " " 'face 'doom-modeline-panel )))
       (concat
-       sep
        (doom-modeline-icon 'mdicon "nf-md-record" "●"
                            (if (bound-and-true-p evil-this-macro)
                                (char-to-string evil-this-macro)
-                             "Macro")
-                           :face 'doom-modeline-panel)
-       vsep
-       (doom-modeline-icon 'octicon "nf-oct-triangle_right" "▶" ">"
+                             "@")
                            :face 'doom-modeline-panel)
        sep))))
 
@@ -1332,13 +1330,7 @@ current search term (with `anzu'), 3. The number of substitutions being
 conducted with `evil-ex-substitute', and/or 4. The number of active `iedit'
 regions, 5. The current/total for the highlight term (with `symbol-overlay'),
 6. The number of active `multiple-cursors'."
-  (let ((meta (concat (doom-modeline--macro-recording)
-                      (doom-modeline--anzu)
-                      (doom-modeline--phi-search)
-                      (doom-modeline--evil-substitute)
-                      (doom-modeline--iedit)
-                      (doom-modeline--symbol-overlay)
-                      (doom-modeline--multiple-cursors))))
+  (let ((meta (doom-modeline--macro-recording)))
     (or (and (not (string-empty-p meta)) meta)
         (doom-modeline--buffer-size))))
 
@@ -1669,7 +1661,7 @@ See `mode-line-percent-position'.")
         (mouse-face 'doom-modeline-highlight)
         (local-map mode-line-column-line-number-mode-map))
     (concat
-     (doom-modeline-wspc)
+     (doom-modeline-spc)
 
      ;; Line and column
      (propertize (format-mode-line lc)
@@ -1783,14 +1775,6 @@ TEXT is alternative if icon is not available."
       ((evil-replace-state-p) "🅡")
       (t "🅝")))))
 
-(defsubst doom-modeline--overwrite ()
-  "The current overwrite state which is enabled by command `overwrite-mode'."
-  (when (and (bound-and-true-p overwrite-mode)
-             (not (bound-and-true-p evil-local-mode)))
-    (doom-modeline--modal-icon
-     "<W>" 'doom-modeline-overwrite "Overwrite mode"
-     "nf-md-note_edit" "🅦")))
-
 (defsubst doom-modeline--god ()
   "The current god state which is enabled by the command `god-mode'."
   (when (bound-and-true-p god-local-mode)
@@ -1845,17 +1829,15 @@ TEXT is alternative if icon is not available."
 Including `evil', `overwrite', `god', `ryo' and `xha-fly-kyes', etc."
   (when doom-modeline-modal
     (let* ((evil (doom-modeline--evil))
-           (ow (doom-modeline--overwrite))
            (god (doom-modeline--god))
            (ryo (doom-modeline--ryo))
            (xf (doom-modeline--xah-fly-keys))
            (boon (doom-modeline--boon))
            (vsep (doom-modeline-vspc))
            (meow (doom-modeline--meow))
-           (sep (and (or evil ow god ryo xf boon) (doom-modeline-spc))))
+           (sep (and (or evil god ryo xf boon) (doom-modeline-spc))))
       (concat sep
-              (and evil (concat evil (and (or ow god ryo xf boon meow) vsep)))
-              (and ow (concat ow (and (or god ryo xf boon meow) vsep)))
+              (and evil (concat evil (and (or god ryo xf boon meow) vsep)))
               (and god (concat god (and (or ryo xf boon meow) vsep)))
               (and ryo (concat ryo (and (or xf boon meow) vsep)))
               (and xf (concat xf (and (or boon meow) vsep)))

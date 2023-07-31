@@ -88,15 +88,15 @@
 ;;
 
 (doom-modeline-def-modeline 'main
-  '(bar workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
-  '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
+  '(bar window-number matches buffer-info major-mode buffer-position remote-host selection-info)
+  '(compilation objed-state misc-info debug repl lsp indent-info process checker time vcs input-method buffer-encoding minor-modes))
 
 (doom-modeline-def-modeline 'minimal
   '(bar matches buffer-info-simple)
   '(media-info major-mode time))
 
 (doom-modeline-def-modeline 'special
-  '(bar window-number modals matches buffer-info remote-host buffer-position word-count parrot selection-info)
+  '(bar window-number modals matches buffer-info remote-host buffer-position word-count selection-info)
   '(compilation objed-state misc-info battery irc-buffers debug minor-modes input-method indent-info buffer-encoding major-mode process time))
 
 (doom-modeline-def-modeline 'project

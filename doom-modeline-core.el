@@ -559,6 +559,11 @@ If nil, display only if the mode line is active."
   :group 'faces
   :link '(url-link :tag "Homepage" "https://github.com/seagle0128/doom-modeline"))
 
+(defface mh/doom-modeline
+  '((t (:background "#1a1a1a")))
+  "Face for `buffer-position' in doom-modeline"
+  :group 'doom-modeline-faces)
+
 (defface doom-modeline
   '((t ()))
   "Default face."
@@ -1091,10 +1096,7 @@ Example:
                                     (/ (string-pixel-width rhs-str)
                                        (doom-modeline--font-width)
                                        1.0)
-                                  (* (string-width rhs-str)
-                                     (if (display-graphic-p)
-                                         (/ (doom-modeline--font-width) (frame-char-width) 0.95)
-                                       1.0)))))))
+                                  (* (string-width rhs-str)))))))
               rhs-forms))
       (concat "Modeline:\n"
               (format "  %s\n  %s"
