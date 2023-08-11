@@ -1089,14 +1089,17 @@ Example:
                'face (doom-modeline-face)
                'display `(space
                           :align-to
-                          (- (+ right right-fringe right-margin scroll-bar)
+                          (- (+ 1 right right-fringe right-margin scroll-bar)
                              ,(let ((rhs-str (format-mode-line (cons "" rhs-forms))))
                                 (if (and (>= emacs-major-version 29)
                                          (fboundp 'string-pixel-width))
                                     (/ (string-pixel-width rhs-str)
                                        (doom-modeline--font-width)
                                        1.0)
-                                  (* (string-width rhs-str)))))))
+                                  (* (string-width rhs-str)
+                                     (if (display-graphic-p)
+                                         (/ (doom-modeline--font-width) (frame-char-width) 0.95)
+                                       1.0)))))))
               rhs-forms))
       (concat "Modeline:\n"
               (format "  %s\n  %s"
