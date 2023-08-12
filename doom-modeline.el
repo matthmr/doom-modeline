@@ -5,7 +5,7 @@
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; Homepage: https://github.com/seagle0128/doom-modeline
 ;; Version: 4.0.0
-;; Package-Requires: ((emacs "25.1") (compat "28.1.1.1") (nerd-icons "0.0.1") (shrink-path "0.2.0"))
+;; Package-Requires: ((emacs "25.1") (compat "29.1.1.1") (nerd-icons "0.0.1") (shrink-path "0.2.0"))
 ;; Keywords: faces mode-line
 
 ;; This file is not part of GNU Emacs.
@@ -129,7 +129,7 @@
 
 (doom-modeline-def-modeline 'pdf
   '(bar window-number matches buffer-info pdf-pages)
-  '(compilation  misc-info major-mode process vcs time))
+  '(compilation misc-info major-mode process vcs time))
 
 (doom-modeline-def-modeline 'org-src
   '(bar window-number modals matches buffer-info buffer-position word-count parrot selection-info)
@@ -171,22 +171,22 @@ If DEFAULT is non-nil, set the default mode-line for all buffers."
 (defvar doom-modeline-mode-map (make-sparse-keymap))
 
 (defvar doom-modeline-mode-alist
-  '((message-mode . message)
-    (git-commit-mode . message)
-    (magit-mode . vcs)
-    (dashboard-mode . dashboard)
-    (Info-mode .  info)
-    (image-mode . media)
-    (pdf-view-mode . pdf)
-    (org-src-mode . org-src)
-    (paradox-menu-mode . package)
-    (xwidget-webkit-mode . minimal)
+  '((message-mode         . message)
+    (git-commit-mode      . message)
+    (magit-mode           . vcs)
+    (dashboard-mode       . dashboard)
+    (Info-mode            . info)
+    (image-mode           . media)
+    (pdf-view-mode        . pdf)
+    (org-src-mode         . org-src)
+    (paradox-menu-mode    . package)
+    (xwidget-webkit-mode  . minimal)
     (git-timemachine-mode . timemachine)
-    (calc-mode . calculator)
-    (calc-trail-mode . calculator)
-    (circe-mode . special)
-    (erc-mode . special)
-    (rcirc-mode . special))
+    (calc-mode            . calculator)
+    (calc-trail-mode      . calculator)
+    (circe-mode           . special)
+    (erc-mode             . special)
+    (rcirc-mode           . special))
   "Alist of major modes and mode-lines.")
 
 (defun doom-modeline-auto-set-modeline ()

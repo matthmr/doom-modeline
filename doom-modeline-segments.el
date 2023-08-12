@@ -179,7 +179,7 @@
 (declare-function flymake-reporting-backends "ext:flymake")
 (declare-function flymake-running-backends "ext:flymake")
 (declare-function flymake-show-buffer-diagnostics "ext:flymake")
-(declare-function flymake-show-diagnostics-buffer "ext:flymake")
+(declare-function flymake-show-buffer-diagnostics "ext:flymake")
 (declare-function flymake-start "ext:flymake")
 (declare-function follow-all-followers "follow")
 (declare-function gnus-demon-add-handler "gnus-demon")
@@ -858,7 +858,8 @@ mouse-2: Show help for minor mode")
                                                                       'doom-modeline-warning)
                                           (doom-modeline-checker-text (number-to-string .info)
                                                                       'doom-modeline-info))))))
-                ;; ('running     nil)
+                ('running     (and doom-modeline--flycheck-text
+                                   (propertize doom-modeline--flycheck-text 'face 'doom-modeline-debug)))
                 ;; ('no-checker  nil)
                 ;; ('errored     (doom-modeline-checker-text "Error" 'doom-modeline-urgent))
                 ;; ('interrupted (doom-modeline-checker-text "Interrupted" 'doom-modeline-debug))
@@ -926,8 +927,8 @@ mouse-3: Next error"
           (when-let
               ((icon
                 (cond
-                 (some-waiting (doom-modeline-checker-icon "nf-md-timer_sand" "⏳" "*" 'doom-modeline-urgent))
-                 ((null known) (doom-modeline-checker-icon "nf-md-alert_box_outline" "⚠" "?" 'doom-modeline-debug))
+                 (some-waiting (doom-modeline-checker-icon "nf-md-timer_sand" "⏳" "*" 'doom-modeline-debug))
+                 ((null known) (doom-modeline-checker-icon "nf-md-alert_box_outline" "⚠" "!" 'doom-modeline-urgent))
                  (all-disabled (doom-modeline-checker-icon "nf-md-alert_outline" "⚠" "!" 'doom-modeline-warning))
                  (t (let ((.error 0)
                           (.warning 0)
@@ -1022,7 +1023,8 @@ mouse-2: Show help for minor mode"
           (when-let
               ((text
                 (cond
-                 (some-waiting doom-modeline--flymake-text)
+                 (some-waiting (and doom-modeline--flymake-text
+                                    (propertize doom-modeline--flymake-text 'face 'doom-modeline-debug)))
                  ((null known) nil)
                  (all-disabled nil)
                  (t (let ((num (+ .error .warning .note)))
@@ -1053,7 +1055,7 @@ mouse-1: List all problems%s"
              'mouse-face 'doom-modeline-highlight
              'local-map (let ((map (make-sparse-keymap)))
                           (define-key map [mode-line mouse-1]
-                            #'flymake-show-diagnostics-buffer)
+                            #'flymake-show-buffer-diagnostics)
                           (when (doom-modeline-mwheel-available-p)
                             (define-key map (vector 'mode-line
                                                     mouse-wheel-down-event)
@@ -1210,7 +1212,8 @@ Requires `anzu', also `evil-anzu' if using `evil-mode' for compatibility with
      'face (doom-modeline-face 'doom-modeline-panel))))
 
 (defsubst doom-modeline--evil-substitute ()
-  "Show number of matches for `evil-ex' substitutions and highlightings in real time."
+  "Show number of matches for `evil-ex' in real time.
+The number of matches contains substitutions and highlightings."
   (when (and (bound-and-true-p evil-local-mode)
              (or (assq 'evil-ex-substitute evil-ex-active-highlights-alist)
                  (assq 'evil-ex-global-match evil-ex-active-highlights-alist)
@@ -1534,7 +1537,8 @@ Requires `eyebrowse-mode' to be enabled or `tab-bar-mode' tabs to be created."
         ((name (cond
                 ((and (bound-and-true-p eyebrowse-mode)
                       (length> (eyebrowse--get 'window-configs) 1))
-                 (assq-delete-all 'eyebrowse-mode mode-line-misc-info)
+                 (setq mode-line-misc-info
+                       (assq-delete-all 'eyebrowse-mode mode-line-misc-info))
                  (when-let*
                      ((num (eyebrowse--get 'current-slot))
                       (tag (nth 2 (assoc num (eyebrowse--get 'window-configs)))))
