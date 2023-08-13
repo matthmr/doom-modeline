@@ -87,65 +87,10 @@
 ;; Mode lines
 ;;
 
+;; `buffer-info' now also displays `kmacro' and `overwrite-mode'
 (doom-modeline-def-modeline 'main
-  '(bar window-number matches buffer-info major-mode buffer-position remote-host selection-info)
-  '(compilation objed-state misc-info debug repl lsp indent-info process checker time vcs input-method buffer-encoding minor-modes))
-
-(doom-modeline-def-modeline 'minimal
-  '(bar matches buffer-info-simple)
-  '(media-info major-mode time))
-
-(doom-modeline-def-modeline 'special
-  '(bar window-number modals matches buffer-info remote-host buffer-position word-count selection-info)
-  '(compilation objed-state misc-info battery irc-buffers debug minor-modes input-method indent-info buffer-encoding major-mode process time))
-
-(doom-modeline-def-modeline 'project
-  '(bar window-number modals buffer-default-directory remote-host buffer-position)
-  '(compilation misc-info battery irc mu4e gnus github debug minor-modes input-method major-mode process time))
-
-(doom-modeline-def-modeline 'dashboard
-  '(bar window-number buffer-default-directory-simple remote-host)
-  '(compilation misc-info battery irc mu4e gnus github debug minor-modes input-method major-mode process time))
-
-(doom-modeline-def-modeline 'vcs
-  '(bar window-number modals matches buffer-info remote-host buffer-position parrot selection-info)
-  '(compilation misc-info battery irc mu4e gnus github debug minor-modes buffer-encoding major-mode process time))
-
-(doom-modeline-def-modeline 'package
-  '(bar window-number package)
-  '(compilation misc-info major-mode process time))
-
-(doom-modeline-def-modeline 'info
-  '(bar window-number buffer-info info-nodes buffer-position parrot selection-info)
-  '(compilation misc-info buffer-encoding major-mode time))
-
-(doom-modeline-def-modeline 'media
-  '(bar window-number buffer-size buffer-info)
-  '(compilation misc-info media-info major-mode process vcs time))
-
-(doom-modeline-def-modeline 'message
-  '(bar window-number modals matches buffer-info-simple buffer-position word-count parrot selection-info)
-  '(compilation objed-state misc-info battery debug minor-modes input-method indent-info buffer-encoding major-mode time))
-
-(doom-modeline-def-modeline 'pdf
-  '(bar window-number matches buffer-info pdf-pages)
-  '(compilation misc-info major-mode process vcs time))
-
-(doom-modeline-def-modeline 'org-src
-  '(bar window-number modals matches buffer-info buffer-position word-count parrot selection-info)
-  '(compilation objed-state misc-info debug lsp minor-modes input-method indent-info buffer-encoding major-mode process checker time))
-
-(doom-modeline-def-modeline 'helm
-  '(bar helm-buffer-id helm-number helm-follow helm-prefix-argument)
-  '(helm-help time))
-
-(doom-modeline-def-modeline 'timemachine
-  '(bar window-number modals matches git-timemachine buffer-position word-count parrot selection-info)
-  '(misc-info minor-modes indent-info buffer-encoding major-mode time))
-
-(doom-modeline-def-modeline 'calculator
-  '(window-number modals matches calc buffer-position)
-  '(misc-info minor-modes major-mode process))
+  '(" " buffer-info major-mode buffer-position remote-host selection-info)
+  '(compilation misc-info lsp process checker time vcs input-method buffer-encoding minor-modes))
 
 
 ;;
@@ -170,37 +115,6 @@ If DEFAULT is non-nil, set the default mode-line for all buffers."
 
 (defvar doom-modeline-mode-map (make-sparse-keymap))
 
-(defvar doom-modeline-mode-alist
-  '((message-mode         . message)
-    (git-commit-mode      . message)
-    (magit-mode           . vcs)
-    (dashboard-mode       . dashboard)
-    (Info-mode            . info)
-    (image-mode           . media)
-    (pdf-view-mode        . pdf)
-    (org-src-mode         . org-src)
-    (paradox-menu-mode    . package)
-    (xwidget-webkit-mode  . minimal)
-    (git-timemachine-mode . timemachine)
-    (calc-mode            . calculator)
-    (calc-trail-mode      . calculator)
-    (circe-mode           . special)
-    (erc-mode             . special)
-    (rcirc-mode           . special))
-  "Alist of major modes and mode-lines.")
-
-(defun doom-modeline-auto-set-modeline ()
-  "Set mode-line base on major-mode."
-  (catch 'found
-    (dolist (x doom-modeline-mode-alist)
-      (when (derived-mode-p (car x))
-        (doom-modeline-set-modeline (cdr x))
-        (throw 'found x)))))
-
-(defun doom-modeline-set-helm-modeline (&rest _) ; To advice helm
-  "Set helm mode-line."
-  (doom-modeline-set-modeline 'helm))
-
 ;;;###autoload
 (define-minor-mode doom-modeline-mode
   "Toggle `doom-modeline' on or off."
@@ -216,14 +130,10 @@ If DEFAULT is non-nil, set the default mode-line for all buffers."
         ;; Apply to all existing buffers.
         (dolist (buf (buffer-list))
           (with-current-buffer buf
-            (unless (doom-modeline-auto-set-modeline)
-              (doom-modeline-set-main-modeline))))
+            (doom-modeline-set-main-modeline)))
 
         ;; For two-column editing
         (setq 2C-mode-line-format (doom-modeline 'special))
-
-        ;; Automatically set mode-lines
-        (add-hook 'after-change-major-mode-hook #'doom-modeline-auto-set-modeline)
 
         ;; Special handles
         (advice-add #'helm-display-mode-line :after #'doom-modeline-set-helm-modeline)
@@ -240,7 +150,6 @@ If DEFAULT is non-nil, set the default mode-line for all buffers."
       (setq 2C-mode-line-format (doom-modeline--original-value '2C-mode-line-format))
 
       ;; Cleanup
-      (remove-hook 'after-change-major-mode-hook #'doom-modeline-auto-set-modeline)
       (advice-remove #'helm-display-mode-line #'doom-modeline-set-helm-modeline)
       (setq helm-ag-show-status-function (default-value 'helm-ag-show-status-function)))))
 

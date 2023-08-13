@@ -30,7 +30,6 @@
 (require 'subr-x)
 
 (require 'compat)
-(require 'nerd-icons)
 (require 'shrink-path)
 
 
@@ -39,6 +38,7 @@
 ;;
 
 ;; Backport from 30
+;; TODO(mh): does this break in Emacs 30?
 (unless (fboundp 'mode--line-format-right-align)
   (defcustom mode-line-right-align-edge 'window
     "Where function `mode-line-format-right-align' should align to.
@@ -61,7 +61,7 @@ Must be set to a symbol.  Acceptable values are:
     (if (fboundp 'string-pixel-width)
         (string-pixel-width str)
       (* (string-width str) (window-font-width nil 'mode-line)
-         (if (display-graphic-p) 1.05 1.0))))
+         1.0)))
 
   (defun mode--line-format-right-align ()
     "Right-align all following mode-line constructs.
@@ -92,21 +92,7 @@ the symbol `mode-line-format-right-align' is processed by
 		              `(space :align-to (- ,mode-line-right-align-edge
                                            (,rest-width)))
 		            `(space :align-to (,(- (window-pixel-width)
-                                           (window-scroll-bar-width)
-                                           (window-right-divider-width)
-                                           (* (or (cdr (window-margins)) 1)
-                                              (frame-char-width))
-                                           ;; Manually account for value of
-                                           ;; `mode-line-right-align-edge' even
-                                           ;; when display is non-graphical
-                                           (pcase mode-line-right-align-edge
-                                             ('right-margin
-                                              (or (cdr (window-margins)) 0))
-                                             ('right-fringe
-                                              ;; what here?
-                                              (or (cadr (window-fringes)) 0))
-                                             (_ 0))
-                                           rest-width)))))))
+                                       (- rest-width 1))))))))
 
   (defvar mode-line-format-right-align '(:eval (mode--line-format-right-align))
     "Mode line construct to right align all following constructs.")
@@ -996,10 +982,6 @@ used as an advice to window creation functions."
   (defvar flycheck-color-mode-line-face-to-color)
   (setq flycheck-color-mode-line-face-to-color 'doom-modeline))
 
-(defun doom-modeline-icon-displayable-p ()
-  "Return non-nil if icons are displayable."
-  (and doom-modeline-icon (featurep 'nerd-icons)))
-
 (defun doom-modeline-mwheel-available-p ()
   "Whether mouse wheel is available."
   (and (featurep 'mwheel) (bound-and-true-p mouse-wheel-mode)))
@@ -1250,7 +1232,7 @@ See https://github.com/seagle0128/doom-modeline/issues/301."
                                      :height  ,(or height 1.0))))))
     (propertize icon 'face `(:inherit (doom-modeline ,face)))))
 
-(defun doom-modeline-icon (icon-set icon-name unicode text &rest args)
+(defun doom-modeline-icon (text &rest args)
   "Display icon of ICON-NAME with ARGS in mode-line.
 
 ICON-SET includes `ipsicon', `octicon', `pomicon', `powerline', `faicon',
@@ -1260,20 +1242,6 @@ ARGS is same as `nerd-icons-octicon' and others."
   (let ((face `(:inherit (doom-modeline
                           ,(or (plist-get args :face) 'mode-line)))))
     (cond
-     ;; Icon
-     ((and (doom-modeline-icon-displayable-p)
-           icon-name
-           (not (string-empty-p icon-name)))
-      (when-let* ((func (nerd-icons--function-name icon-set))
-                  (icon (and (fboundp func)
-                             (apply func icon-name args))))
-        (doom-modeline-propertize-icon icon face)))
-     ;; Unicode fallback
-     ((and doom-modeline-unicode-fallback
-           unicode
-           (not (string-empty-p unicode))
-           (char-displayable-p (string-to-char unicode)))
-      (propertize unicode 'face face))
      ;; ASCII text
      (text
       (propertize text 'face face))
