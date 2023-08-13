@@ -1,3 +1,11 @@
+# NOTE
+
+This is the `mH` fork of `doom-modeline`. My changes are mostly subtractive. The
+goal of this fork is to make it suitable for a very specific niche of Emacs
+users: the ones that use Emacs without graphic display and with little to no
+external packages installed. If you're not in this group, I suggest you use the
+original instead.
+
 # doom-modeline
 
 [![Build Status](https://github.com/seagle0128/doom-modeline/workflows/CI/badge.svg?branch=master)](https://github.com/seagle0128/doom-modeline/actions)
