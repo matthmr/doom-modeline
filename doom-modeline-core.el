@@ -26,10 +26,10 @@
 
 ;;; Code:
 
-(require 'cl-lib)
-(require 'subr-x)
-
 (require 'compat)
+(eval-when-compile
+  (require 'cl-lib)
+  (require 'subr-x))
 (require 'shrink-path)
 
 
@@ -1247,10 +1247,6 @@ ARGS is same as `nerd-icons-octicon' and others."
       (propertize text 'face face))
      ;; Fallback
      (t ""))))
-
-(defun doom-modeline-icon-for-buffer ()
-  "Get the formatted icon for the current buffer."
-  (nerd-icons-icon-for-buffer))
 
 (defun doom-modeline-display-icon (icon)
   "Display ICON in mode-line."

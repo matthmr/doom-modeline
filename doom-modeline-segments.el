@@ -27,10 +27,11 @@
 
 ;;; Code:
 
-(require 'cl-lib)
-(require 'seq)
-(require 'subr-x)
 (require 'doom-modeline-core)
+(eval-when-compile
+  (require 'cl-lib)
+  (require 'seq)
+  (require 'subr-x))
 
 
 ;;
@@ -476,9 +477,9 @@ project directory is important."
           (when-let
               ((icon
                 (cond
-                 (some-waiting (doom-modeline-checker-icon "nf-md-timer_sand" "⏳" "*" 'doom-modeline-debug))
-                 ((null known) (doom-modeline-checker-icon "nf-md-alert_box_outline" "⚠" "!" 'doom-modeline-urgent))
-                 (all-disabled (doom-modeline-checker-icon "nf-md-alert_outline" "⚠" "!" 'doom-modeline-warning))
+                 (some-waiting (doom-modeline-checker-icon "*" 'doom-modeline-debug))
+                 ((null known) (doom-modeline-checker-icon "!" 'doom-modeline-urgent))
+                 (all-disabled (doom-modeline-checker-icon "!" 'doom-modeline-warning))
                  (t (let ((.error 0)
                           (.warning 0)
                           (.note 0))
@@ -496,11 +497,11 @@ project directory is important."
                                      ((> severity note-level)    (cl-incf .warning))
                                      (t                          (cl-incf .note))))))
                         (if (> (+ .error .warning .note) 0)
-                            (doom-modeline-checker-icon "nf-md-alert_circle_outline" "❗" "!"
+                            (doom-modeline-checker-icon "!"
                                                         (cond ((> .error 0) 'doom-modeline-urgent)
                                                               ((> .warning 0) 'doom-modeline-warning)
                                                               (t 'doom-modeline-info)))
-                          (doom-modeline-checker-icon "nf-md-check_circle_outline" "✔" "-" 'doom-modeline-info))))))))
+                          (doom-modeline-checker-icon "-" 'doom-modeline-info))))))))
             (propertize
              icon
              'help-echo (concat "Flymake\n"
@@ -531,7 +532,7 @@ mouse-2: Show help for minor mode"
      (dolist (buf (buffer-list))
        (with-current-buffer buf
          (when (bound-and-true-p flymake-mode)
-           (flymake-start)))))))
+           (doom-modeline-update-flymake-icon)))))))
 
 (doom-modeline-add-variable-watcher
  'doom-modeline-unicode-fallback
@@ -541,12 +542,22 @@ mouse-2: Show help for minor mode"
      (dolist (buf (buffer-list))
        (with-current-buffer buf
          (when (bound-and-true-p flymake-mode)
-           (flymake-start)))))))
+           (doom-modeline-update-flymake-icon)))))))
+
+(defun doom-modeline-checker-text (text &optional face)
+  "Displays TEXT with FACE."
+  (propertize text 'face (or face 'mode-line)))
+
+(defun doom-modeline-checker-icon (text face)
+  "Displays the checker ICON with FACE.
+
+UNICODE and TEXT are fallbacks.
+Uses `nerd-icons-mdicon' to fetch the icon."
+  (doom-modeline-icon text :face face))
 
 (defvar-local doom-modeline--flymake-text nil)
 (defun doom-modeline-update-flymake-text (&rest _)
   "Update flymake text."
-  (setq flymake--mode-line-format nil) ; remove the lighter of minor mode
   (setq doom-modeline--flymake-text
         (let* ((known (hash-table-keys flymake--state))
                (running (flymake-running-backends))
@@ -621,15 +632,22 @@ mouse-1: List all problems%s"
                             map)))))))
 (advice-add #'flymake--handle-report :after #'doom-modeline-update-flymake-text)
 
+(doom-modeline-add-variable-watcher
+ 'doom-modeline-checker-simple-format
+ (lambda (_sym val op _where)
+   (when (eq op 'set)
+     (setq doom-modeline-checker-simple-format val)
+     (dolist (buf (buffer-list))
+       (with-current-buffer buf
+         (when (bound-and-true-p flymake-mode)
+           (doom-modeline-update-flymake-text)))))))
+
 (doom-modeline-def-segment checker
   "Displays color-coded error status in the current buffer with pretty icons."
   (let* ((seg (cond
                ((and (bound-and-true-p flymake-mode)
                      (bound-and-true-p flymake--state)) ; only support 26+
-                `(,doom-modeline--flymake-icon . ,doom-modeline--flymake-text))
-               ((and (bound-and-true-p flycheck-mode)
-                     (bound-and-true-p flycheck--automatically-enabled-checkers))
-                `(,doom-modeline--flycheck-icon . ,doom-modeline--flycheck-text))))
+                `(,doom-modeline--flymake-icon . ,doom-modeline--flymake-text))))
          (icon (car seg))
          (text (cdr seg)))
     (concat
@@ -998,12 +1016,8 @@ mouse-1: Start server"))
 
 (defun doom-modeline-update-lsp-icon ()
   "Update lsp icon."
-  (cond ((bound-and-true-p lsp-mode)
-         (doom-modeline-update-lsp))
-        ((bound-and-true-p eglot--managed-mode)
-         (doom-modeline-update-eglot))
-        ((bound-and-true-p citre-mode)
-         (doom-modeline-update-tags))))
+  (cond ((bound-and-true-p eglot--managed-mode)
+         (doom-modeline-update-eglot))))
 
 (doom-modeline-add-variable-watcher
  'doom-modeline-icon
@@ -1026,12 +1040,8 @@ mouse-1: Start server"))
 (doom-modeline-def-segment lsp
   "The LSP server state."
   (when doom-modeline-lsp
-    (let ((icon (cond ((bound-and-true-p lsp-mode)
-                       doom-modeline--lsp)
-                      ((bound-and-true-p eglot--managed-mode)
-                       doom-modeline--eglot)
-                      ((bound-and-true-p citre-mode)
-                       doom-modeline--tags))))
+    (let ((icon (cond ((bound-and-true-p eglot--managed-mode)
+                       doom-modeline--eglot))))
       (when icon
         (concat
          (doom-modeline-spc)
@@ -1106,6 +1116,38 @@ mouse-1: Start server"))
                    (make-mode-line-mouse-map
                     'mouse-2
 			        #'compilation-goto-in-progress-buffer))))
+
+;;
+;; Eldoc
+;;
+
+(doom-modeline-def-segment eldoc
+  (and (bound-and-true-p eldoc-mode)
+       '(eldoc-mode-line-string
+		 (" " eldoc-mode-line-string " "))))
+
+(defun doom-modeline-eldoc-minibuffer-message (format-string &rest args)
+  "Display message specified by FORMAT-STRING and ARGS on the mode-line as needed.
+This function displays the message produced by formatting ARGS
+with FORMAT-STRING on the mode line when the current buffer is a minibuffer.
+Otherwise, it displays the message like `message' would."
+  (if (minibufferp)
+      (progn
+	    (add-hook 'minibuffer-exit-hook
+		          (lambda () (setq eldoc-mode-line-string nil
+			                  ;; https://debbugs.gnu.org/16920
+			                  eldoc-last-message nil))
+		          nil t)
+	    (with-current-buffer
+	        (window-buffer
+	         (or (window-in-direction 'above (minibuffer-window))
+                 (minibuffer-selected-window)
+		         (get-largest-window)))
+          (setq eldoc-mode-line-string
+                (when (stringp format-string)
+                  (apply #'format-message format-string args)))
+          (force-mode-line-update)))
+    (apply #'message format-string args)))
 
 (provide 'doom-modeline-segments)
 

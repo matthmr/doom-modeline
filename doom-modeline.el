@@ -89,7 +89,7 @@
 
 ;; `buffer-info' now also displays `kmacro' and `overwrite-mode'
 (doom-modeline-def-modeline 'main
-  '(" " buffer-info major-mode buffer-position remote-host selection-info)
+  '(" " eldoc buffer-info major-mode buffer-position remote-host selection-info)
   '(compilation misc-info lsp process checker time vcs input-method buffer-encoding minor-modes))
 
 
@@ -110,6 +110,7 @@ If DEFAULT is non-nil, set the default mode-line for all buffers."
 
 ;; Suppress warnings
 (defvar 2C-mode-line-format)
+(defvar flymake-mode-line-format)
 (defvar helm-ag-show-status-function)
 (declare-function helm-display-mode-line "ext:helm-core")
 
@@ -132,12 +133,14 @@ If DEFAULT is non-nil, set the default mode-line for all buffers."
           (with-current-buffer buf
             (doom-modeline-set-main-modeline)))
 
-        ;; For two-column editing
-        (setq 2C-mode-line-format (doom-modeline 'special))
+        ;; For flymake
+        (setq flymake-mode-line-format nil) ; remove the lighter of minor mode
 
-        ;; Special handles
-        (advice-add #'helm-display-mode-line :after #'doom-modeline-set-helm-modeline)
-        (setq helm-ag-show-status-function #'doom-modeline-set-helm-modeline))
+        ;; For Eldoc
+        (setq eldoc-message-function #'doom-modeline-eldoc-minibuffer-message)
+
+        ;; For two-column editing
+        (setq 2C-mode-line-format (doom-modeline 'special)))
     (progn
       ;; Restore mode-line
       (let ((original-format (doom-modeline--original-value 'mode-line-format)))
@@ -146,12 +149,14 @@ If DEFAULT is non-nil, set the default mode-line for all buffers."
           (with-current-buffer buf
             (setq mode-line-format original-format))))
 
-      ;; For two-column editing
-      (setq 2C-mode-line-format (doom-modeline--original-value '2C-mode-line-format))
+      ;; For flymake
+      (setq flymake-mode-line-format (doom-modeline--original-value 'flymake-mode-line-format))
 
-      ;; Cleanup
-      (advice-remove #'helm-display-mode-line #'doom-modeline-set-helm-modeline)
-      (setq helm-ag-show-status-function (default-value 'helm-ag-show-status-function)))))
+      ;; For Eldoc
+      (setq eldoc-message-function #'eldoc-minibuffer-message)
+
+      ;; For two-column editing
+      (setq 2C-mode-line-format (doom-modeline--original-value '2C-mode-line-format)))))
 
 (provide 'doom-modeline)
 
