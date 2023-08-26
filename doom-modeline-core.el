@@ -37,11 +37,9 @@
 ;; Compatibility
 ;;
 
-;; Backport from 30
-;; TODO(mh): does this break in Emacs 30?
-(unless (fboundp 'mode--line-format-right-align)
+(unless (boundp 'mode-line-right-align-edge)
   (defcustom mode-line-right-align-edge 'window
-    "Where function `mode-line-format-right-align' should align to.
+    "Where mode-line should align to.
 Internally, that function uses `:align-to' in a display property,
 so aligns to the left edge of the given area.  See info node
 `(elisp)Pixel Specification'.
@@ -54,50 +52,7 @@ Must be set to a symbol.  Acceptable values are:
     :type '(choice (const right-margin)
                    (const right-fringe)
                    (const window))
-    :group 'mode-line)
-
-  (defun doom-modeline-string-pixel-width (str)
-    "Return the width of STR in pixels."
-    (if (fboundp 'string-pixel-width)
-        (string-pixel-width str)
-      (* (string-width str) (window-font-width nil 'mode-line)
-         1.0)))
-
-  (defun mode--line-format-right-align ()
-    "Right-align all following mode-line constructs.
-
-When the symbol `mode-line-format-right-align' appears in
-`mode-line-format', return a string of one space, with a display
-property to make it appear long enough to align anything after
-that symbol to the right of the rendered mode line.  Exactly how
-far to the right is controlled by `mode-line-right-align-edge'.
-
-It is important that the symbol `mode-line-format-right-align' be
-included in `mode-line-format' (and not another similar construct
-such as `(:eval (mode-line-format-right-align)').  This is because
-the symbol `mode-line-format-right-align' is processed by
-`format-mode-line' as a variable."
-    (let* ((rest (cdr (memq 'mode-line-format-right-align
-			                mode-line-format)))
-	       (rest-str (format-mode-line `("" ,@rest)))
-	       (rest-width (progn
-                         (add-face-text-property
-                          0 (length rest-str) 'mode-line t rest-str)
-                         (doom-modeline-string-pixel-width rest-str))))
-      (propertize " " 'display
-		          ;; The `right' spec doesn't work on TTY frames
-		          ;; when windows are split horizontally (bug#59620)
-		          (if (and (display-graphic-p)
-                           (not (eq mode-line-right-align-edge 'window)))
-		              `(space :align-to (- ,mode-line-right-align-edge
-                                           (,rest-width)))
-		            `(space :align-to (,(- (window-pixel-width)
-                                       (- rest-width 1))))))))
-
-  (defvar mode-line-format-right-align '(:eval (mode--line-format-right-align))
-    "Mode line construct to right align all following constructs.")
-  ;;;###autoload
-  (put 'mode-line-format-right-align 'risky-local-variable t))
+    :group 'mode-line))
 
 
 ;;
@@ -1128,7 +1083,20 @@ Example:
         (rhs-forms (doom-modeline--prepare-segments rhs)))
     (defalias sym
       (lambda ()
-        `(,lhs-forms ,rhs-forms))
+        (list lhs-forms
+              (let* ((rhs-str (format-mode-line (cons "" rhs-forms)))
+                     (rhs-width (progn
+                                  (add-face-text-property
+                                   0 (length rhs-str) 'mode-line t rhs-str)
+                                  (doom-modeline-string-pixel-width rhs-str))))
+                (propertize
+                 " "
+                 'face (doom-modeline-face)
+                 'display
+                 ;; Backport from `mode-line-right-align-edge' in 30
+		            `(space :align-to (,(- (window-pixel-width)
+                                       (- rhs-width 1))))))
+              rhs-forms))
       (concat "Modeline:\n"
               (format "  %s\n  %s"
                       (prin1-to-string lhs)
@@ -1140,10 +1108,7 @@ Example:
 Throws an error if it doesn't exist."
   (let ((fn (intern-soft (format "doom-modeline-format--%s" key))))
     (when (functionp fn)
-      (let* ((modeline (funcall fn))
-             (lhs (car modeline))
-             (rhs (cdr modeline)))
-        `(,lhs mode-line-format-right-align ,rhs)))))
+      `(:eval (,fn)))))
 
 (defun doom-modeline-set-modeline (key &optional default)
   "Set the modeline format. Does nothing if the modeline KEY doesn't exist.
@@ -1152,8 +1117,7 @@ If DEFAULT is non-nil, set the default mode-line for all buffers."
     (setf (if default
               (default-value 'mode-line-format)
             mode-line-format)
-          modeline)))
-
+          (list "%e" modeline))))
 
 ;;
 ;; Helpers
@@ -1189,6 +1153,13 @@ If INACTIVE-FACE is nil, `mode-line-inactive' face will be used."
         (and (facep inactive-face) inactive-face)
         'mode-line-inactive)))
 
+(defun doom-modeline-string-pixel-width (str)
+    "Return the width of STR in pixels."
+    (if (fboundp 'string-pixel-width)
+        (string-pixel-width str)
+      (* (string-width str) (window-font-width nil 'mode-line)
+         1.0)))
+
 (defun doom-modeline--font-height ()
   "Calculate the actual char height of the mode-line."
   (let ((height (face-attribute 'mode-line :height))
@@ -1223,7 +1194,8 @@ The face should be the first attribute, or the font family may be overridden.
 So convert the face \":family XXX :height XXX :inherit XXX\" to
 \":inherit XXX :family XXX :height XXX\".
 See https://github.com/seagle0128/doom-modeline/issues/301."
-  (propertize icon 'face `(:inherit (doom-modeline ,face))))
+  (when icon
+    (propertize icon 'face `(:inherit (doom-modeline ,face)))))
 
 (defun doom-modeline-icon (text &rest args)
   "Display icon of ICON-NAME with ARGS in mode-line.
