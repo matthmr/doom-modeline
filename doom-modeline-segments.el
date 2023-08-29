@@ -324,10 +324,12 @@ project directory is important."
   (propertize
    (concat
     (doom-modeline-spc)
-    (propertize (format-mode-line
-                 (or (and (boundp 'delighted-modes)
-                          (cadr (assq major-mode delighted-modes)))
-                     mode-name))
+    (propertize (let ((name (if (listp mode-name)
+                                (car mode-name) mode-name)))
+                  (format-mode-line (concat
+                                      (unless (zerop (recursion-depth))
+                                        "* ")
+                                      name)))
                 'help-echo "Major mode\n\
   mouse-1: Display major mode menu\n\
   mouse-2: Show help for major mode\n\
