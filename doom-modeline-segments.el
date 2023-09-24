@@ -207,6 +207,7 @@ mouse-1: Previous buffer\nmouse-3: Next buffer"
 Including the current working directory, the file name, and its state (modified,
 read-only or non-existent)."
   (concat
+   (doom-modeline-spc)
    (doom-modeline--buffer-state-icon)
    (doom-modeline--buffer-name)
    (doom-modeline-spc)))
@@ -1152,6 +1153,19 @@ Otherwise, it displays the message like `message' would."
                   (apply #'format-message format-string args)))
           (force-mode-line-update)))
     (apply #'message format-string args)))
+
+;;
+;; Viper
+;;
+
+(doom-modeline-def-segment viper
+  (when (bound-and-true-p viper-mode)
+    (when-let ((state (cl-case viper-current-state
+                        (emacs-state " E> ")
+                        (vi-state " N> ")
+                        (insert-state " I> ")
+                        (replace-state " R> "))))
+      (doom-modeline-icon state :face 'mh/doom-modeline))))
 
 (provide 'doom-modeline-segments)
 
