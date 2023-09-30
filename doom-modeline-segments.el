@@ -1162,7 +1162,7 @@ Otherwise, it displays the message like `message' would."
   (when (bound-and-true-p viper-mode)
     (when-let ((state (cl-case viper-current-state
                         (emacs-state " E> ")
-                        (vi-state " N> ")
+                        (vi-state " V> ")
                         (insert-state " I> ")
                         (replace-state " R> "))))
       (doom-modeline-icon state :face 'mh/doom-modeline))))
