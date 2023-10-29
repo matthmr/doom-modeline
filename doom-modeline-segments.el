@@ -1139,13 +1139,14 @@ Otherwise, it displays the message like `message' would."
 ;;
 
 (doom-modeline-def-segment viper
-  (when (bound-and-true-p viper-mode)
+  (if (bound-and-true-p viper-mode)
     (when-let ((state (cl-case viper-current-state
                         (emacs-state " E> ")
                         (vi-state " V> ")
                         (insert-state " I> ")
                         (replace-state " R> "))))
-      (doom-modeline-icon state :face 'mh/doom-modeline))))
+      (doom-modeline-icon state :face 'mh/doom-modeline))
+    (doom-mode-line-icon " E> " :face 'mh/doom-modeline)))
 
 (provide 'doom-modeline-segments)
 
