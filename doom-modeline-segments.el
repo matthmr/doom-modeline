@@ -1161,7 +1161,7 @@ Otherwise, it displays the message like `message' would."
                         (insert-state " I> ")
                         (replace-state " R> "))))
       (doom-modeline-icon state :face 'mh/doom-modeline))
-    (doom-mode-line-icon " E> " :face 'mh/doom-modeline)))
+    (doom-modeline-icon " E> " :face 'mh/doom-modeline)))
 
 (provide 'doom-modeline-segments)
 
