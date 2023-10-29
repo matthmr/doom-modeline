@@ -817,12 +817,14 @@ block selection."
 
 (doom-modeline-def-segment bar
   "The bar regulates the height of the `doom-modeline' in GUI."
-  (if doom-modeline-hud
-      (doom-modeline--hud)
-    (doom-modeline--bar)))
+  (concat
+   (if doom-modeline-hud
+       (doom-modeline--hud)
+     (doom-modeline--bar))
+   (doom-modeline-spc)))
 
 (doom-modeline-def-segment hud
-  "Powerline's hud segment reimplemented in the style of Doom's bar segment."
+  "Powerline's hud segment reimplemented in the style of bar segment."
   (doom-modeline--hud))
 
 ;;
@@ -1005,6 +1007,15 @@ mouse-1: Start server"))
          (doom-modeline-update-eglot))))
 
 (doom-modeline-add-variable-watcher
+ 'doom-modeline-lsp-icon
+ (lambda (_sym val op _where)
+   (when (eq op 'set)
+     (setq doom-modeline-lsp-icon val)
+     (dolist (buf (buffer-list))
+       (with-current-buffer buf
+         (doom-modeline-update-lsp-icon))))))
+
+(doom-modeline-add-variable-watcher
  'doom-modeline-icon
  (lambda (_sym val op _where)
    (when (eq op 'set)
@@ -1055,6 +1066,11 @@ mouse-1: Start server"))
 ;; Display time
 ;;
 
+(defun doom-modeline-time-icon ()
+  "Displays the time icon."
+  (doom-modeline-icon ""
+                      :face '(:inherit doom-modeline-time :weight normal)))
+
 (doom-modeline-def-segment time
   (when (and doom-modeline-time
              (bound-and-true-p display-time-mode)
@@ -1063,10 +1079,9 @@ mouse-1: Start server"))
      (doom-modeline-spc)
      (when doom-modeline-time-icon
        (concat
-        (doom-modeline-icon ""
-                            :face '(:inherit doom-modeline-time :weight normal))
+        (doom-modeline-time-icon)
         (and (or doom-modeline-icon doom-modeline-unicode-fallback)
-             (doom-modeline-spc))))
+             (doom-modeline-vspc))))
      (propertize display-time-string
                  'face (doom-modeline-face 'doom-modeline-time)))))
 
@@ -1096,11 +1111,11 @@ mouse-1: Start server"))
        (propertize "[Compiling] "
                    'face (doom-modeline-face 'doom-modeline-compilation)
 	               'help-echo "Compiling; mouse-2: Goto Buffer"
-                   'mouse-face 'doom-modeline-highlight
-                   'local-map
-                   (make-mode-line-mouse-map
-                    'mouse-2
-			        #'compilation-goto-in-progress-buffer))))
+  'mouse-face 'doom-modeline-highlight
+  'local-map
+  (make-mode-line-mouse-map
+   'mouse-2
+   #'compilation-goto-in-progress-buffer))))
 
 ;;
 ;; Eldoc
