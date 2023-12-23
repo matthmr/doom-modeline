@@ -951,14 +951,19 @@ mouse-3: Describe current input method")
   "Display LSP icon (or TEXT in terminal) with FACE."
   (doom-modeline-icon text :face face))
 
+(defun doom-modeline--eglot-pending-count (server)
+  "Get count of pending eglot requests to SERVER."
+  (if (fboundp 'jsonrpc-continuation-count)
+      (jsonrpc-continuation-count server)
+    (hash-table-count (jsonrpc--request-continuations server))))
+
 (defvar-local doom-modeline--eglot nil)
 (defun doom-modeline-update-eglot ()
   "Update `eglot' state."
   (setq doom-modeline--eglot
         (pcase-let* ((server (and (eglot-managed-p) (eglot-current-server)))
                      (nick (and server (eglot--project-nickname server)))
-                     (pending (and server (hash-table-count
-                                           (jsonrpc--request-continuations server))))
+                     (pending (and server (doom-modeline--eglot-pending-count server)))
                      (last-error (and server (jsonrpc-last-error server)))
                      (face (cond (last-error 'doom-modeline-lsp-error)
                                  ((and pending (cl-plusp pending)) 'doom-modeline-lsp-warning)
