@@ -4,7 +4,7 @@
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; Homepage: https://github.com/seagle0128/doom-modeline
-;; Version: 4.1.0
+;; Version: 4.2.0
 ;; Package-Requires: ((emacs "25.1") (compat "29.1.4.2") (nerd-icons "0.1.0") (shrink-path "0.3.1"))
 ;; Keywords: faces mode-line
 
@@ -90,7 +90,7 @@
 ;; `buffer-info' now also displays `kmacro' and `overwrite-mode'
 (doom-modeline-def-modeline 'main
   '(eldoc viper buffer-info major-mode buffer-position remote-host selection-info)
-  '(compilation misc-info lsp process checker time vcs input-method buffer-encoding minor-modes))
+  '(compilation misc-info lsp process check time vcs input-method buffer-encoding minor-modes))
 
 
 ;;

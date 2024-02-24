@@ -456,6 +456,21 @@ project directory is important."
                  'local-map (get-text-property 1 'local-map vc-mode))
      (doom-modeline-spc))))
 
+;;
+;; Check
+;;
+
+(defun doom-modeline-check-icon (text face)
+  "Displays the check ICON with FACE.
+
+UNICODE and TEXT are fallbacks.
+Uses `nerd-icons-mdicon' to fetch the icon."
+  (doom-modeline-icon text :face face))
+
+(defun doom-modeline-check-text (text &optional face)
+  "Displays the check TEXT with FACE."
+  (propertize text 'face (or face 'mode-line)))
+
 ;; Flymake
 
 ;; Compatibility
@@ -480,9 +495,9 @@ project directory is important."
           (when-let
               ((icon
                 (cond
-                 (some-waiting (doom-modeline-checker-icon "*" 'doom-modeline-debug))
-                 ((null known) (doom-modeline-checker-icon "!" 'doom-modeline-urgent))
-                 (all-disabled (doom-modeline-checker-icon "!" 'doom-modeline-warning))
+                 (some-waiting (doom-modeline-check-icon "*" 'doom-modeline-debug))
+                 ((null known) (doom-modeline-check-icon "!" 'doom-modeline-urgent))
+                 (all-disabled (doom-modeline-check-icon "!" 'doom-modeline-warning))
                  (t (let ((.error 0)
                           (.warning 0)
                           (.note 0))
@@ -500,11 +515,11 @@ project directory is important."
                                      ((> severity note-level)    (cl-incf .warning))
                                      (t                          (cl-incf .note))))))
                         (if (> (+ .error .warning .note) 0)
-                            (doom-modeline-checker-icon "!"
+                            (doom-modeline-check-icon "!"
                                                         (cond ((> .error 0) 'doom-modeline-urgent)
                                                               ((> .warning 0) 'doom-modeline-warning)
                                                               (t 'doom-modeline-info)))
-                          (doom-modeline-checker-icon "-" 'doom-modeline-info))))))))
+                          (doom-modeline-check-icon "-" 'doom-modeline-info))))))))
             (propertize
              icon
              'help-echo (concat "Flymake\n"
@@ -547,17 +562,6 @@ mouse-2: Show help for minor mode"
          (when (bound-and-true-p flymake-mode)
            (doom-modeline-update-flymake-icon)))))))
 
-(defun doom-modeline-checker-text (text &optional face)
-  "Displays TEXT with FACE."
-  (propertize text 'face (or face 'mode-line)))
-
-(defun doom-modeline-checker-icon (text face)
-  "Displays the checker ICON with FACE.
-
-UNICODE and TEXT are fallbacks.
-Uses `nerd-icons-mdicon' to fetch the icon."
-  (doom-modeline-icon text :face face))
-
 (defvar-local doom-modeline--flymake-text nil)
 (defun doom-modeline-update-flymake-text (&rest _)
   "Update flymake text."
@@ -592,17 +596,17 @@ Uses `nerd-icons-mdicon' to fetch the icon."
                  (all-disabled nil)
                  (t (let ((num (+ .error .warning .note)))
                       (when (> num 0)
-                        (if doom-modeline-checker-simple-format
-                            (doom-modeline-checker-text (number-to-string num)
+                        (if doom-modeline-check-simple-format
+                            (doom-modeline-check-text (number-to-string num)
                                                         (cond ((> .error 0) 'doom-modeline-urgent)
                                                               ((> .warning 0) 'doom-modeline-warning)
                                                               (t 'doom-modeline-info)))
                           (format "%s/%s/%s"
-                                  (doom-modeline-checker-text (number-to-string .error)
+                                  (doom-modeline-check-text (number-to-string .error)
                                                               'doom-modeline-urgent)
-                                  (doom-modeline-checker-text (number-to-string .warning)
+                                  (doom-modeline-check-text (number-to-string .warning)
                                                               'doom-modeline-warning)
-                                  (doom-modeline-checker-text (number-to-string .note)
+                                  (doom-modeline-check-text (number-to-string .note)
                                                               'doom-modeline-info)))))))))
             (propertize
              text
@@ -636,16 +640,16 @@ mouse-1: List all problems%s"
 (advice-add #'flymake--handle-report :after #'doom-modeline-update-flymake-text)
 
 (doom-modeline-add-variable-watcher
- 'doom-modeline-checker-simple-format
+ 'doom-modeline-check-simple-format
  (lambda (_sym val op _where)
    (when (eq op 'set)
-     (setq doom-modeline-checker-simple-format val)
+     (setq doom-modeline-check-simple-format val)
      (dolist (buf (buffer-list))
        (with-current-buffer buf
          (when (bound-and-true-p flymake-mode)
            (doom-modeline-update-flymake-text)))))))
 
-(doom-modeline-def-segment checker
+(doom-modeline-def-segment check
   "Displays color-coded error status in the current buffer with pretty icons."
   (let* ((seg (cond
                ((and (bound-and-true-p flymake-mode)
