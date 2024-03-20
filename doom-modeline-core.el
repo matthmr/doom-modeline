@@ -652,7 +652,7 @@ If nil, display only if the mode line is active."
   :link '(url-link :tag "Homepage" "https://github.com/seagle0128/doom-modeline"))
 
 (defface mh/doom-modeline
-  '((t (:background "#1a1a1a")))
+  '((t (:inherit (doom-modeline completions-highlight) :background "black")))
   "Face for `buffer-position' in doom-modeline"
   :group 'doom-modeline-faces)
 
