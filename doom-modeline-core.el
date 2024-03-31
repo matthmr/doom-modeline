@@ -444,12 +444,26 @@ in the given order."
   :type '(alist :key-type symbol :value-type sexp)
   :group 'doom-modeline)
 
+(defcustom doom-modeline-vcs-icon t
+  "Whether display the icon of vcs segment.
+
+It respects option `doom-modeline-icon'."
+  :type 'boolean
+  :group 'doom-modeline)
+
+(defcustom doom-modeline-check-icon t
+  "Whether display the icon of check segment.
+
+It respects option `doom-modeline-icon'."
+  :type 'boolean
+  :group 'doom-modeline)
+
 (define-obsolete-variable-alias
   'doom-modeline-checker-simple-format
   'doom-modeline-check-simple-format
   "4.2.0")
 
-(defcustom doom-modeline-check-simple-format t
+(defcustom doom-modeline-check-simple-format nil
   "If non-nil, only display one number for check information if applicable."
   :type 'boolean
   :group 'doom-modeline)
@@ -1235,19 +1249,19 @@ If DEFAULT is non-nil, set the default mode-line for all buffers."
 IF FACE is nil, `mode-line' face will be used.
 If INACTIVE-FACE is nil, `mode-line-inactive' face will be used."
   (if (doom-modeline--active)
-      (or (and (facep face) face)
-          (and (facep 'mode-line-active) 'mode-line-active)
-          'mode-line)
-    (or (and (facep face) `(:inherit (mode-line-inactive ,face)))
-        (and (facep inactive-face) inactive-face)
-        'mode-line-inactive)))
+      (or (and (facep face) `(:inherit (doom-modeline ,face)))
+          (and (facep 'mode-line-active) '(:inherit (doom-modeline mode-line-active)))
+          '(:inherit (doom-modeline mode-line)))
+    (or (and (facep face) `(:inherit (doom-modeline mode-line-inactive ,face)))
+        (and (facep inactive-face) `(:inherit (doom-modeline ,inactive-face)))
+        '(:inherit (doom-modeline mode-line-inactive)))))
 
 (defun doom-modeline-string-pixel-width (str)
-    "Return the width of STR in pixels."
-    (if (fboundp 'string-pixel-width)
-        (string-pixel-width str)
-      (* (string-width str) (window-font-width nil 'mode-line)
-         1.0)))
+  "Return the width of STR in pixels."
+  (if (fboundp 'string-pixel-width)
+      (string-pixel-width str)
+    (* (string-width str) (window-font-width nil 'mode-line)
+       1.0)))
 
 (defun doom-modeline--font-height ()
   "Calculate the actual char height of the mode-line."
@@ -1312,7 +1326,8 @@ ARGS is same as `nerd-icons-octicon' and others."
   "Display TEXT in mode-line."
   (if (doom-modeline--active)
       text
-    (propertize text 'face 'mode-line-inactive)))
+    (propertize text 'face `(:inherit (mode-line-inactive
+                                       ,(get-text-property 0 'face text))))))
 
 (defun doom-modeline--create-bar-image (face width height)
   "Create the bar image.
