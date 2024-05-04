@@ -1,3 +1,11 @@
+# NOTE
+
+This is the `mH` fork of `doom-modeline`. My changes are mostly subtractive. The
+goal of this fork is to make it suitable for a very specific niche of Emacs
+users: the ones that use Emacs without graphic display and with little to no
+external packages installed. If you're not in this group, I suggest you use the
+original instead.
+
 # doom-modeline
 
 [![Build Status](https://github.com/seagle0128/doom-modeline/workflows/CI/badge.svg?branch=master)](https://github.com/seagle0128/doom-modeline/actions)
@@ -286,8 +294,14 @@ Run `M-x customize-group RET doom-modeline RET` or set the variables.
 ;; Whether display the total line number。
 (setq doom-modeline-total-line-number nil)
 
-;; If non-nil, only display one number for checker information if applicable.
-(setq doom-modeline-checker-simple-format t)
+;; Whether display the icon of vcs segment. It respects option `doom-modeline-icon'."
+(setq doom-modeline-vcs-icon t)
+
+;; Whether display the icon of check segment. It respects option `doom-modeline-icon'.
+(setq doom-modeline-check-icon t)
+
+;; If non-nil, only display one number for check information if applicable.
+(setq doom-modeline-check-simple-format nil)
 
 ;; The maximum number displayed for notifications.
 (setq doom-modeline-number-limit 99)
