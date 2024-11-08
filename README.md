@@ -6,6 +6,11 @@ users: the ones that use Emacs without graphic display and with little to no
 external packages installed. If you're not in this group, I suggest you use the
 original instead.
 
+The master branch is not where most of the action occurs, instead, look for the
+relevant version you want as a tag, then see if an equivalent mh-* version
+exists as well. For example: version 4.1.0 has mh-4.1.0 as its mh equivalent.
+Thoses forks are kept in the pkg branch.
+
 # doom-modeline
 
 [![Build Status](https://github.com/seagle0128/doom-modeline/workflows/CI/badge.svg?branch=master)](https://github.com/seagle0128/doom-modeline/actions)
