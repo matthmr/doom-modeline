@@ -1101,18 +1101,13 @@ Otherwise, it displays the message like `message' would."
     (apply #'message format-string args)))
 
 ;;
-;; Viper
 ;;
+;; modal
 
-(doom-modeline-def-segment viper
-  (if (bound-and-true-p viper-mode)
-    (when-let ((state (cl-case viper-current-state
-                        (emacs-state " E> ")
-                        (vi-state " V> ")
-                        (insert-state " I> ")
-                        (replace-state " R> "))))
-      (doom-modeline-icon state :face 'mh/doom-modeline))
-    (doom-modeline-icon " E> " :face 'mh/doom-modeline)))
+(doom-modeline-def-segment modal
+  (if (fboundp 'mh/ed)
+    (doom-modeline-icon (mh/ed-string) :face 'mh/doom-modeline)
+    (doom-modeline-icon " * " :face 'mh/doom-modeline)))
 
 (provide 'doom-modeline-segments)
 

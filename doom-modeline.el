@@ -89,7 +89,7 @@
 
 ;; `buffer-info' now also displays `kmacro' and `overwrite-mode'
 (doom-modeline-def-modeline 'main
-  '(eldoc viper buffer-info major-mode buffer-position remote-host selection-info)
+  '(eldoc modal buffer-info major-mode buffer-position remote-host selection-info)
   '(compilation misc-info lsp process check time vcs input-method buffer-encoding minor-modes))
 
 
