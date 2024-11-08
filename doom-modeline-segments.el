@@ -98,20 +98,18 @@
                        (bound-and-true-p dired-narrow-mode))
                (doom-modeline-buffer-file-state-icon "="
                  'doom-modeline-warning))
-             (cond (buffer-read-only
-                    (doom-modeline-buffer-file-state-icon "%1*"
-                      'doom-modeline-warning))
-                   ((and (buffer-modified-p)
-                         doom-modeline-buffer-modification-icon)
-                    (doom-modeline-buffer-file-state-icon "%1*"
-                      'doom-modeline-warning))
-                   ((and buffer-file-name
-                         ;; Avoid freezing while connection is lost
-                         (not (file-remote-p buffer-file-name))
-                         (not (file-exists-p buffer-file-name)))
-                    (doom-modeline-buffer-file-state-icon "!"
-                      'doom-modeline-urgent))
-                   (t ""))
+             (when (buffer-modified-p)
+               (doom-modeline-buffer-file-state-icon "*"
+                 'doom-modeline-warning))
+             (when buffer-read-only
+               (doom-modeline-buffer-file-state-icon "%%"
+                  'doom-modeline-warning))
+             (when (and buffer-file-name
+                   ;; Avoid freezing while connection is lost
+                   (not (file-remote-p buffer-file-name))
+                   (not (file-exists-p buffer-file-name)))
+              (doom-modeline-buffer-file-state-icon "!"
+                'doom-modeline-urgent))
              (when (or defining-kbd-macro executing-kbd-macro)
               (doom-modeline-buffer-file-state-icon "@"
                 'doom-modeline-warning))
