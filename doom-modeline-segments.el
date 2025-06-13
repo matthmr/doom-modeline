@@ -167,8 +167,8 @@ mouse-1: Previous buffer\nmouse-3: Next buffer"
     (when-let ((icon (doom-modeline-update-buffer-file-state-icon)))
       (unless (string-empty-p icon)
         (concat
-         (doom-modeline-display-icon icon)
-         (doom-modeline-vspc))))))
+          (doom-modeline-vspc)
+          (doom-modeline-display-icon icon))))))
 
 (defsubst doom-modeline--buffer-simple-name ()
   "The buffer simple name."
@@ -206,9 +206,13 @@ Including the current working directory, the file name, and its state (modified,
 read-only or non-existent)."
   (concat
    (doom-modeline-spc)
-   (doom-modeline--buffer-state-icon)
+   (when (fboundp 'mh/ed)
+     (concat
+      (doom-modeline-icon (mh/ed-string) :face 'doom-modeline-face)
+      " "))
    (doom-modeline--buffer-name)
-   (doom-modeline-spc)))
+   (doom-modeline--buffer-state-icon)
+   ))
 
 (doom-modeline-def-segment buffer-info-simple
   "Display only the current buffer's name, but with fontification."
@@ -257,8 +261,6 @@ project directory is important."
   (when doom-modeline-buffer-encoding
     (let ((mouse-face 'doom-modeline-highlight))
       (concat
-       (doom-modeline-spc)
-
        ;; eol type
        (let ((eol (coding-system-eol-type buffer-file-coding-system)))
          (when (or (eq doom-modeline-buffer-encoding t)
@@ -266,11 +268,11 @@ project directory is important."
                         (not (equal eol doom-modeline-default-eol-type))))
            (propertize
             (pcase eol
-              (0 "LF ")
-              (1 "CRLF ")
-              (2 "CR ")
-              (_ ""))
-            'face (doom-modeline-face)
+              (0 " LF ")
+              (1 " CRLF ")
+              (2 " CR ")
+              (_ " ??"))
+            'face (doom-modeline-face 'doom-modeline-buffer-minor-mode)
             'mouse-face mouse-face
             'help-echo (format "End-of-line style: %s\nmouse-1: Cycle"
                                (pcase eol
@@ -295,12 +297,12 @@ project directory is important."
                         (not (eq sym doom-modeline-default-coding-system))))
            (propertize
             (upcase (symbol-name sym))
-            'face (doom-modeline-face)
+            'face (doom-modeline-face 'doom-modeline-buffer-minor-mode)
             'mouse-face mouse-face
             'help-echo 'mode-line-mule-info-help-echo
             'local-map mode-line-coding-system-map)))
 
-       (doom-modeline-spc)))))
+       (propertize " |" 'face (doom-modeline-face 'doom-modeline-buffer-minor-mode))))))
 
 ;;
 ;; Remote host
@@ -320,6 +322,7 @@ project directory is important."
 
 (doom-modeline-def-segment major-mode
   "The major mode, including environment and text-scale info."
+  (concat (doom-modeline-spc)
   (propertize
    (concat
     (doom-modeline-spc)
@@ -336,7 +339,7 @@ mouse-3: Toggle minor modes"
                 'mouse-face 'doom-modeline-highlight
                 'local-map mode-line-major-mode-keymap)
     (doom-modeline-spc))
-   'face (doom-modeline-face 'doom-modeline-buffer-major-mode)))
+   'face (doom-modeline-face 'doom-modeline-buffer-major-mode))))
 
 ;;
 ;; Process
@@ -387,11 +390,11 @@ Uses `nerd-icons-octicon' to fetch the icon."
                  (icon (cond ((memq state '(edited added))
                               (doom-modeline-vcs-icon "*"))
                              ((eq state 'needs-merge)
-                              (doom-modeline-vcs-icon "?"))
+                              (doom-modeline-vcs-icon "U"))
                              ((eq state 'needs-update)
                               (doom-modeline-vcs-icon "!"))
                              ((memq state '(removed conflict unregistered))
-                              (doom-modeline-icon "!"))
+                              (doom-modeline-icon "R"))
                              (t (doom-modeline-vcs-icon "@"))))
                  (str (if vc-display-status
                           (substring vc-mode (+ (if (eq backend 'Hg) 2 3) 2))
@@ -401,8 +404,8 @@ Uses `nerd-icons-octicon' to fetch the icon."
                                         (substring str 0 (- doom-modeline-vcs-max-length 3))
                                         doom-modeline-ellipsis)
                                      str))))
-            (propertize (concat " " icon (doom-modeline-vspc) text " ")
-                        'face '(:inherit mh/doom-modeline)
+            (propertize (concat icon text)
+                        'face '(:inherit (doom-modeline bold))
                         'mouse-face 'doom-modeline-highlight
                         'help-echo (get-text-property 1 'help-echo vc-mode)
                         'local-map (get-text-property 1 'local-map vc-mode))))))
@@ -442,8 +445,7 @@ Uses `nerd-icons-octicon' to fetch the icon."
   (when-let ((seg doom-modeline--vcs))
     (concat
      (doom-modeline-spc)
-     (doom-modeline-display-text seg)
-     (doom-modeline-spc))))
+     (doom-modeline-display-text seg))))
 
 ;;
 ;; Check
@@ -806,13 +808,12 @@ By default, this shows the information specified by `global-mode-string'."
         (mouse-face 'doom-modeline-highlight)
         (local-map mode-line-column-line-number-mode-map))
     (concat
-     (doom-modeline-spc)
-
      ;; Line and column
-     (propertize (concat (format-mode-line lc)
+     (propertize (concat " "
+                         (format-mode-line lc)
                          (and doom-modeline-total-line-number
                               (format "/%d" (line-number-at-pos (point-max)))))
-                 'face (doom-modeline-face)
+                 'face (doom-modeline-face 'doom-modeline-buffer-minor-mode)
                  'help-echo "Buffer position\n\
 mouse-1: Display Line and Column Mode Menu"
                  'mouse-face mouse-face
@@ -821,16 +822,15 @@ mouse-1: Display Line and Column Mode Menu"
      ;; Percent position
      (when doom-modeline-percent-position
        (concat
-        (doom-modeline-spc)
-        (propertize (format-mode-line '("" doom-modeline-percent-position "%%"))
-                    'face (doom-modeline-face)
+        (propertize (format-mode-line '(" " doom-modeline-percent-position "%%"))
+                    'face (doom-modeline-face 'doom-modeline-buffer-minor-mode)
                     'help-echo "Buffer percentage\n\
 mouse-1: Display Line and Column Mode Menu"
                     'mouse-face mouse-face
                     'local-map local-map)))
 
      (when (or line-number-mode column-number-mode doom-modeline-percent-position)
-       (doom-modeline-spc)))))
+       (propertize "  |" 'face (doom-modeline-face 'doom-modeline-buffer-minor-mode))))))
 
 ;;
 ;; Input method
@@ -913,7 +913,7 @@ mouse-3: Describe current input method")
                                  ((and pending (cl-plusp pending)) 'doom-modeline-lsp-warning)
                                  (nick 'doom-modeline-lsp-success)
                                  (t 'doom-modeline-lsp-warning)))
-                     (icon (doom-modeline-lsp-icon "EGLOT" face)))
+                     (icon (doom-modeline-lsp-icon "&" face)))
           (propertize icon
                       'help-echo (cond
                                   (last-error
@@ -1097,15 +1097,6 @@ Otherwise, it displays the message like `message' would."
                   (apply #'format-message format-string args)))
           (force-mode-line-update)))
     (apply #'message format-string args)))
-
-;;
-;;
-;; modal
-
-(doom-modeline-def-segment modal
-  (if (fboundp 'mh/ed)
-    (doom-modeline-icon (mh/ed-string) :face 'mh/doom-modeline)
-    (doom-modeline-icon " * " :face 'mh/doom-modeline)))
 
 (provide 'doom-modeline-segments)
 
