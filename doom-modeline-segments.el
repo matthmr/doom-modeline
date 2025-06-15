@@ -809,6 +809,7 @@ By default, this shows the information specified by `global-mode-string'."
         (local-map mode-line-column-line-number-mode-map))
     (concat
      ;; Line and column
+     " "
      (propertize (concat " "
                          (format-mode-line lc)
                          (and doom-modeline-total-line-number
